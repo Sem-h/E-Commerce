@@ -30,6 +30,16 @@ $decodedDesc = html_entity_decode($product['description'] ?? '', ENT_QUOTES | EN
 $decodedShort = html_entity_decode($product['short_description'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 require_once 'includes/header.php';
+
+// Fiyat uyarısı kontrolü
+$hasPriceAlert = false;
+if (isLoggedIn()) {
+    try {
+        $alertCheck = Database::fetch("SELECT id FROM price_alerts WHERE user_id = ? AND product_id = ?", [$_SESSION['user_id'], $product['id']]);
+        $hasPriceAlert = !!$alertCheck;
+    } catch (Exception $e) {
+    }
+}
 ?>
 
 <div class="container" style="padding-top:16px; padding-bottom:40px;">
@@ -129,6 +139,13 @@ require_once 'includes/header.php';
                         <i class="fas fa-heart"></i>
                     </button>
                 </div>
+                <!-- Fiyat Düşünce Haber Ver -->
+                <button onclick="togglePriceAlert(<?= $product['id'] ?>)"
+                    class="pd-price-alert-btn <?= $hasPriceAlert ? 'active' : '' ?>"
+                    style="margin-top:10px;width:100%;padding:10px 16px;border:2px solid #f59e0b;background:<?= $hasPriceAlert ? '#fef3c7' : '#fff' ?>;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center;font-size:0.85rem;font-weight:600;color:#92400e;transition:all .2s">
+                    <i class="fas fa-<?= $hasPriceAlert ? 'bell-slash' : 'bell' ?>"></i>
+                    <?= $hasPriceAlert ? 'Uyarı Aktif' : 'Fiyat Düşünce Haber Ver' ?>
+                </button>
             <?php else: ?>
                 <div class="pd-out-of-stock-msg">
                     <i class="fas fa-exclamation-triangle"></i>

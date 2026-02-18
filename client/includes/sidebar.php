@@ -30,6 +30,10 @@ $initials = strtoupper(mb_substr($user['first_name'] ?? 'U', 0, 1));
         <li><a href="<?= BASE_URL ?>/client/wishlist.php"
                 class="<?= ($activePage ?? '') == 'wishlist' ? 'active' : '' ?>"><i class="fas fa-heart"></i>
                 Favorilerim</a></li>
+        <li><a href="<?= BASE_URL ?>/client/price-alerts.php"
+                class="<?= ($activePage ?? '') == 'price_alerts' ? 'active' : '' ?>"><i class="fas fa-bell"
+                    style="color:#f59e0b"></i>
+                Fiyat Uyarılarım</a></li>
         <li><a href="<?= BASE_URL ?>/client/logout.php" style="color:var(--danger)"><i class="fas fa-sign-out-alt"></i>
                 Çıkış Yap</a></li>
     </ul>

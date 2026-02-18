@@ -25,6 +25,8 @@ $imageUrl = getImageUrl($product['image']);
                     class="fas fa-cart-plus"></i></button>
             <button onclick="toggleWishlist(<?= $product['id'] ?>)" title="Favorilere Ekle"><i
                     class="fas fa-heart"></i></button>
+            <button onclick="togglePriceAlert(<?= $product['id'] ?>)" title="Fiyat Düşünce Haber Ver"><i
+                    class="fas fa-bell"></i></button>
         </div>
     </div>
     <div class="product-info">

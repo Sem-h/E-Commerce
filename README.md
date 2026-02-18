@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-2.0.2-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.0.3-blue?style=for-the-badge" />
 </p>
 
 <h1 align="center">🛒 V-Commerce</h1>
@@ -34,6 +34,7 @@
 | 🎯 **Kampanya Sistemi** | % indirim, hediye çeki, indirim kodu, müşteriye özel |
 | 🏠 **Adrese Teslim** | Şehir bazı gün içi teslimat seçeneği |
 | 📍 **Akıllı Adres** | İl/İlçe cascading dropdown, 81 il desteği |
+| 🔔 **Fiyat Uyarısı** | Fiyat düşünce haber ver, takip paneli |
 | 👤 **Müşteri Paneli** | Siparişler, adresler, profil yönetimi |
 | 📱 **Responsive Tasarım** | Tüm cihazlarda mükemmel görünüm |
 
@@ -195,6 +196,24 @@ E-Ticaret/
 - ✅ HTML entity decode (ürün adları & açıklamalar)
 - ✅ 232 ürün adı + 1429 kısa açıklama düzeltildi
 - ✅ Import script'te otomatik decode
+
+---
+
+### v2.0.3 — 18 Şubat 2026
+> 🔔 **Fiyat Uyarısı & İyileştirmeler**
+
+#### 🔔 Fiyat Düşünce Haber Ver
+- ✅ Ürün detayda "🔔 Fiyat Düşünce Haber Ver" butonu
+- ✅ Ürün kartında 🔔 ikon (hover overlay)
+- ✅ AJAX toggle (ekle/kaldır)
+- ✅ Client panel: Fiyat Uyarılarım sayfası
+- ✅ Kayıt fiyatı vs güncel fiyat karşılaştırması
+- ✅ Fiyat düştüğünde yeşil badge + "Satın Al" butonu
+
+#### 📍 Adres İyileştirmeleri
+- ✅ Mahalle/Cadde alanı eklendi
+- ✅ İl/İlçe cascading dropdown (81 il)
+- ✅ Adrese teslim seçildiğinde kargo satırı "Adrese Teslim" olarak değişiyor
 
 ---
 
