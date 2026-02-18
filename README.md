@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.0.1-blue?style=for-the-badge" />
 </p>
 
 <h1 align="center">🛒 V-Commerce</h1>

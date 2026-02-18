@@ -54,42 +54,69 @@ $brands = Database::fetchAll("SELECT DISTINCT brand FROM products WHERE brand IS
         <div class="home-content">
             <!-- Hero Slider -->
             <div class="home-slider">
-                <div class="home-slide active" style="background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);">
-                    <div class="slide-content">
-                        <span class="slide-badge">🔥 Özel Kampanya</span>
-                        <h2>Teknolojinin Gücünü Keşfedin</h2>
-                        <p>En yeni elektronik ürünleri en uygun fiyatlarla V-Commerce'de bulun.</p>
-                        <a href="<?= BASE_URL ?>/products.php" class="btn btn-secondary">Alışverişe Başla</a>
+                <?php
+                // Slider tablosu yoksa sessizce devam et
+                try {
+                    $sliders = Database::fetchAll("SELECT * FROM sliders WHERE status = 1 ORDER BY sort_order ASC, id ASC");
+                } catch (Exception $e) {
+                    $sliders = [];
+                }
+                if (empty($sliders)):
+                    ?>
+                    <div class="home-slide active" style="background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);">
+                        <div class="slide-content">
+                            <span class="slide-badge">🛒 V-Commerce</span>
+                            <h2>Hoş Geldiniz</h2>
+                            <p>Admin panelinden slider ekleyerek bu alanı özelleştirebilirsiniz.</p>
+                            <a href="<?= BASE_URL ?>/products.php" class="btn btn-secondary">Alışverişe Başla</a>
+                        </div>
                     </div>
-                </div>
-                <div class="home-slide" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
-                    <div class="slide-content">
-                        <span class="slide-badge">💻 Bilgisayar</span>
-                        <h2>Bilgisayar Parçalarında İndirim</h2>
-                        <p>Anakart, işlemci, ekran kartı ve daha fazlası uygun fiyatlarla.</p>
-                        <a href="<?= BASE_URL ?>/products.php?category=bilgisayar-parcalari"
-                            class="btn btn-secondary">İncele</a>
+                <?php else: ?>
+                    <?php foreach ($sliders as $si => $slide): ?>
+                        <div class="home-slide <?= $si === 0 ? 'active' : '' ?>"
+                            style="background: <?= $slide['image'] ? 'url(' . e($slide['image']) . ') center/cover no-repeat' : 'linear-gradient(135deg, ' . e($slide['gradient_start']) . ' 0%, ' . e($slide['gradient_end']) . ' 100%)' ?>;">
+                            <div class="slide-content">
+                                <?php if ($slide['badge']): ?><span
+                                        class="slide-badge"><?= e($slide['badge']) ?></span><?php endif; ?>
+                                <h2><?= e($slide['title']) ?></h2>
+                                <?php if ($slide['description']): ?>
+                                    <p><?= e($slide['description']) ?></p><?php endif; ?>
+                                <a href="<?= BASE_URL . e($slide['button_url']) ?>"
+                                    class="btn btn-secondary"><?= e($slide['button_text']) ?></a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    <div class="slider-dots">
+                        <?php foreach ($sliders as $si => $slide): ?>
+                            <button class="slider-dot <?= $si === 0 ? 'active' : '' ?>" onclick="goSlide(<?= $si ?>)"></button>
+                        <?php endforeach; ?>
                     </div>
-                </div>
-                <div class="home-slide" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
-                    <div class="slide-content">
-                        <span class="slide-badge">🔒 Güvenlik</span>
-                        <h2>Güvenlik Sistemleri</h2>
-                        <p>IP kameralar, DVR/NVR cihazları ve alarm sistemleri.</p>
-                        <a href="<?= BASE_URL ?>/products.php?category=guvenlik-sistemleri"
-                            class="btn btn-secondary">Keşfet</a>
-                    </div>
-                </div>
-                <div class="slider-dots">
-                    <button class="slider-dot active" onclick="goSlide(0)"></button>
-                    <button class="slider-dot" onclick="goSlide(1)"></button>
-                    <button class="slider-dot" onclick="goSlide(2)"></button>
-                </div>
-                <button class="slider-arrow slider-prev" onclick="prevSlide()"><i
-                        class="fas fa-chevron-left"></i></button>
-                <button class="slider-arrow slider-next" onclick="nextSlide()"><i
-                        class="fas fa-chevron-right"></i></button>
+                    <button class="slider-arrow slider-prev" onclick="prevSlide()"><i
+                            class="fas fa-chevron-left"></i></button>
+                    <button class="slider-arrow slider-next" onclick="nextSlide()"><i
+                            class="fas fa-chevron-right"></i></button>
+                <?php endif; ?>
             </div>
+
+            <!-- Promosyon Bannerları (Slider Altı) -->
+            <?php if (!empty($sliders) && count($sliders) >= 2): ?>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+                    <?php foreach (array_slice($sliders, 0, 4) as $promo): ?>
+                        <a href="<?= BASE_URL . e($promo['button_url']) ?>"
+                            style="display:block;text-decoration:none;border-radius:12px;padding:24px 22px;color:#fff;overflow:hidden;background:linear-gradient(135deg, <?= e($promo['gradient_start']) ?>, <?= e($promo['gradient_end']) ?>);transition:transform 0.2s,box-shadow 0.2s"
+                            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+                            onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <?php if ($promo['badge']): ?><span
+                                    style="display:inline-block;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:12px;font-size:0.7rem;margin-bottom:6px"><?= e($promo['badge']) ?></span><?php endif; ?>
+                            <h3 style="margin:0 0 4px;font-size:1rem;font-weight:700"><?= e($promo['title']) ?></h3>
+                            <p style="margin:0;opacity:0.85;font-size:0.8rem"><?= e($promo['description']) ?></p>
+                            <span
+                                style="display:inline-block;margin-top:10px;background:rgba(255,255,255,0.2);padding:5px 14px;border-radius:6px;font-size:0.75rem;font-weight:600"><?= e($promo['button_text']) ?>
+                                →</span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
 
             <!-- Banner Row -->
             <div class="home-banners">
@@ -118,6 +145,7 @@ $brands = Database::fetchAll("SELECT DISTINCT brand FROM products WHERE brand IS
         </div>
     </div>
 </div>
+
 
 <!-- Öne Çıkan Ürünler -->
 <?php if (!empty($featuredProducts)): ?>
