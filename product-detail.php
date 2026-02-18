@@ -15,7 +15,7 @@ if (!$product) {
 // Görüntülenme sayısı artır
 Database::query("UPDATE products SET view_count = view_count + 1 WHERE id = ?", [$product['id']]);
 
-$pageTitle = $product['name'];
+$pageTitle = html_entity_decode($product['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
 $related = Database::fetchAll(
     "SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id 
      WHERE p.category_id = ? AND p.id != ? AND p.status = 1 ORDER BY RAND() LIMIT 4",
@@ -25,6 +25,9 @@ $related = Database::fetchAll(
 $price = $product['discount_price'] ?: $product['price'];
 $hasDiscount = $product['discount_price'] && $product['discount_price'] < $product['price'];
 $discountPercent = $hasDiscount ? round((($product['price'] - $product['discount_price']) / $product['price']) * 100) : 0;
+$decodedName = html_entity_decode($product['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$decodedDesc = html_entity_decode($product['description'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$decodedShort = html_entity_decode($product['short_description'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 require_once 'includes/header.php';
 ?>
@@ -34,125 +37,168 @@ require_once 'includes/header.php';
         <a href="<?= BASE_URL ?>/">Ana Sayfa</a>
         <span class="separator"><i class="fas fa-chevron-right"></i></span>
         <?php if (!empty($product['category_name'])): ?>
-            <a href="<?= BASE_URL ?>/category.php?slug=<?= e($product['category_slug'] ?? '') ?>">
+            <a href="<?= BASE_URL ?>/products.php?category=<?= e($product['category_slug'] ?? '') ?>">
                 <?= e($product['category_name']) ?>
             </a>
             <span class="separator"><i class="fas fa-chevron-right"></i></span>
         <?php endif; ?>
         <span class="current">
-            <?= e(truncate($product['name'], 50)) ?>
+            <?= e(truncate($decodedName, 50)) ?>
         </span>
     </div>
 
-    <div class="product-detail">
-        <!-- Gallery -->
-        <div class="product-gallery">
-            <img src="<?= e(getImageUrl($product['image'])) ?>" alt="<?= e($product['name']) ?>" class="main-image">
+    <div class="pd-grid">
+        <!-- Sol: Ürün Görseli -->
+        <div class="pd-gallery">
+            <div class="pd-image-main">
+                <?php if ($hasDiscount): ?>
+                    <span class="pd-badge-sale">%<?= $discountPercent ?> İNDİRİM</span>
+                <?php endif; ?>
+                <?php if (strtotime($product['created_at']) > strtotime('-7 days')): ?>
+                    <span class="pd-badge-new">YENİ</span>
+                <?php endif; ?>
+                <img src="<?= e(getImageUrl($product['image'])) ?>" alt="<?= e($decodedName) ?>" id="mainImg">
+            </div>
         </div>
 
-        <!-- Info -->
-        <div class="product-detail-info">
+        <!-- Sağ: Ürün Bilgileri -->
+        <div class="pd-info">
             <?php if (!empty($product['brand'])): ?>
-                <span class="product-category">
+                <a href="<?= BASE_URL ?>/products.php?brand=<?= urlencode($product['brand']) ?>" class="pd-brand">
                     <?= e($product['brand']) ?>
-                </span>
+                </a>
             <?php endif; ?>
 
-            <h1>
-                <?= e($product['name']) ?>
-            </h1>
+            <h1 class="pd-title"><?= htmlspecialchars($decodedName, ENT_QUOTES, 'UTF-8') ?></h1>
 
-            <div class="product-meta">
-                <span><i class="fas fa-barcode"></i> SKU:
-                    <?= e($product['sku'] ?: 'N/A') ?>
-                </span>
-                <span><i class="fas fa-eye"></i>
-                    <?= number_format($product['view_count']) ?> görüntülenme
-                </span>
-                <span>
-                    <i class="fas fa-circle"
-                        style="color:<?= $product['stock'] > 0 ? 'var(--success)' : 'var(--danger)' ?>;font-size:8px"></i>
-                    <?= $product['stock'] > 0 ? 'Stokta (' . $product['stock'] . ' adet)' : 'Tükendi' ?>
-                </span>
+            <div class="pd-meta">
+                <div class="pd-meta-item">
+                    <i class="fas fa-barcode"></i>
+                    <span><?= e($product['sku'] ?: 'N/A') ?></span>
+                </div>
+                <div class="pd-meta-item">
+                    <i class="fas fa-eye"></i>
+                    <span><?= number_format($product['view_count']) ?> görüntülenme</span>
+                </div>
+                <div class="pd-meta-item pd-stock <?= $product['stock'] > 0 ? 'in-stock' : 'out-of-stock' ?>">
+                    <i class="fas fa-<?= $product['stock'] > 0 ? 'check-circle' : 'times-circle' ?>"></i>
+                    <span><?= $product['stock'] > 0 ? 'Stokta (' . $product['stock'] . ' adet)' : 'Tükendi' ?></span>
+                </div>
             </div>
 
-            <div class="detail-price">
-                <span class="current-price">
-                    <?= formatPrice($price) ?>
-                </span>
+            <!-- Fiyat Alanı -->
+            <div class="pd-price-box">
+                <div class="pd-price-row">
+                    <span class="pd-current-price"><?= formatPrice($price) ?></span>
+                    <?php if ($hasDiscount): ?>
+                        <span class="pd-old-price"><?= formatPrice($product['price']) ?></span>
+                        <span class="pd-discount-tag">%<?= $discountPercent ?> İndirim</span>
+                    <?php endif; ?>
+                </div>
                 <?php if ($hasDiscount): ?>
-                    <span class="old-price">
-                        <?= formatPrice($product['price']) ?>
-                    </span>
-                    <span class="discount-percent">%
-                        <?= $discountPercent ?> İndirim
-                    </span>
+                    <div class="pd-savings">
+                        <i class="fas fa-piggy-bank"></i>
+                        Bu üründe <strong><?= formatPrice($product['price'] - $price) ?></strong> tasarruf edin
+                    </div>
                 <?php endif; ?>
             </div>
 
-            <?php if (!empty($product['short_description'])): ?>
-                <div class="detail-short-desc">
-                    <?= e($product['short_description']) ?>
+            <?php if (!empty($decodedShort)): ?>
+                <div class="pd-short-desc">
+                    <p><?= strip_tags($decodedShort) ?></p>
                 </div>
             <?php endif; ?>
 
+            <!-- Sepete Ekle -->
             <?php if ($product['stock'] > 0): ?>
-                <div class="quantity-selector">
-                    <button type="button" class="qty-minus">−</button>
-                    <input type="number" id="qty" value="1" min="1" max="<?= $product['stock'] ?>">
-                    <button type="button" class="qty-plus">+</button>
-                </div>
-
-                <div class="detail-actions">
+                <div class="pd-actions">
+                    <div class="pd-qty">
+                        <button type="button" class="qty-minus" onclick="changeQty(-1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" id="qty" value="1" min="1" max="<?= $product['stock'] ?>" readonly>
+                        <button type="button" class="qty-plus" onclick="changeQty(1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                     <button onclick="addToCart(<?= $product['id'] ?>, document.getElementById('qty').value)"
-                        class="btn btn-primary btn-lg">
+                        class="btn btn-primary btn-lg pd-add-cart">
                         <i class="fas fa-cart-plus"></i> Sepete Ekle
                     </button>
-                    <button onclick="toggleWishlist(<?= $product['id'] ?>)" class="btn btn-outline-primary btn-lg">
+                    <button onclick="toggleWishlist(<?= $product['id'] ?>)" class="pd-wishlist-btn" title="Favorilere Ekle">
                         <i class="fas fa-heart"></i>
                     </button>
                 </div>
             <?php else: ?>
-                <div class="alert alert-warning"><i class="fas fa-info-circle"></i> Bu ürün şu anda stokta bulunmamaktadır.
+                <div class="pd-out-of-stock-msg">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Bu ürün şu anda stokta yok</strong>
+                        <p>Tekrar stoka girdiğinde sizi bilgilendirmemizi ister misiniz?</p>
+                    </div>
                 </div>
             <?php endif; ?>
 
-            <div class="detail-features">
-                <div class="detail-feature">
-                    <i class="fas fa-truck"></i>
-                    <span>Hızlı Kargo</span>
+            <!-- Güvence -->
+            <div class="pd-guarantees">
+                <div class="pd-guarantee">
+                    <i class="fas fa-truck-fast"></i>
+                    <div>
+                        <strong>Ücretsiz Kargo</strong>
+                        <span>150₺ üzeri siparişlerde</span>
+                    </div>
                 </div>
-                <div class="detail-feature">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Güvenli Ödeme</span>
+                <div class="pd-guarantee">
+                    <i class="fas fa-shield-halved"></i>
+                    <div>
+                        <strong>Güvenli Ödeme</strong>
+                        <span>256-bit SSL şifreleme</span>
+                    </div>
                 </div>
-                <div class="detail-feature">
-                    <i class="fas fa-undo"></i>
-                    <span>Kolay İade</span>
+                <div class="pd-guarantee">
+                    <i class="fas fa-rotate-left"></i>
+                    <div>
+                        <strong>Kolay İade</strong>
+                        <span>14 gün içinde ücretsiz</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Açıklama -->
-    <?php if (!empty($product['description'])): ?>
-        <div
-            style="background:var(--white); border-radius:var(--radius-lg); padding:32px; border:1px solid var(--gray-200); margin-top:24px;">
-            <h3
-                style="font-size:1.25rem; font-weight:700; margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--gray-200);">
-                <i class="fas fa-info-circle" style="color:var(--primary)"></i> Ürün Açıklaması
-            </h3>
-            <div style="font-size:0.9375rem; line-height:1.8; color:var(--dark-600);">
-                <?= nl2br(e($product['description'])) ?>
+    <!-- Açıklama Tabları -->
+    <?php if (!empty($decodedDesc)): ?>
+        <div class="pd-tabs-section">
+            <div class="pd-tabs-header">
+                <button class="pd-tab active" onclick="switchTab(this, 'tab-desc')">
+                    <i class="fas fa-file-alt"></i> Ürün Açıklaması
+                </button>
+                <button class="pd-tab" onclick="switchTab(this, 'tab-specs')">
+                    <i class="fas fa-list-check"></i> Teknik Özellikler
+                </button>
+            </div>
+            <div class="pd-tab-content" id="tab-desc" style="display:block">
+                <div class="pd-description-content">
+                    <?= $decodedDesc ?>
+                </div>
+            </div>
+            <div class="pd-tab-content" id="tab-specs" style="display:none">
+                <div class="pd-description-content">
+                    <?= $decodedDesc ?>
+                </div>
             </div>
         </div>
     <?php endif; ?>
 
     <!-- Benzer Ürünler -->
     <?php if (!empty($related)): ?>
-        <section class="section">
+        <section class="pd-related">
             <div class="section-header">
                 <h2 class="section-title">Benzer Ürünler</h2>
+                <a href="<?= BASE_URL ?>/products.php?category=<?= e($product['category_slug'] ?? '') ?>"
+                    class="section-link">
+                    Tümünü Gör <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
             <div class="products-grid">
                 <?php foreach ($related as $product): ?>
@@ -162,5 +208,23 @@ require_once 'includes/header.php';
         </section>
     <?php endif; ?>
 </div>
+
+<script>
+    function changeQty(delta) {
+        const input = document.getElementById('qty');
+        let val = parseInt(input.value) + delta;
+        const max = parseInt(input.max);
+        if (val < 1) val = 1;
+        if (val > max) val = max;
+        input.value = val;
+    }
+
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.pd-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.pd-tab-content').forEach(c => c.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById(tabId).style.display = 'block';
+    }
+</script>
 
 <?php require_once 'includes/footer.php'; ?>

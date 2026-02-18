@@ -454,3 +454,51 @@ function getStats()
         'pending_orders' => Database::fetch("SELECT COUNT(*) as c FROM orders WHERE status='pending'")['c'],
     ];
 }
+
+// ==================== DÖVİZ KURU ====================
+
+/**
+ * TCMB'den güncel döviz kurlarını çeker
+ * @return array ['USD' => float, 'EUR' => float, 'date' => string]
+ */
+function getTCMBRates()
+{
+    // 5 dakika cache
+    $cacheFile = sys_get_temp_dir() . '/tcmb_rates.json';
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 300) {
+        $cached = json_decode(file_get_contents($cacheFile), true);
+        if ($cached)
+            return $cached;
+    }
+
+    $rates = ['USD' => 0, 'EUR' => 0, 'date' => ''];
+
+    try {
+        $ctx = stream_context_create(['http' => ['timeout' => 5]]);
+        $xmlStr = @file_get_contents('https://www.tcmb.gov.tr/kurlar/today.xml', false, $ctx);
+        if (!$xmlStr)
+            return $rates;
+
+        $xml = @simplexml_load_string($xmlStr);
+        if (!$xml)
+            return $rates;
+
+        $rates['date'] = (string) $xml['Tarih'];
+
+        foreach ($xml->Currency as $cur) {
+            $code = (string) $cur['CurrencyCode'];
+            if ($code === 'USD') {
+                $rates['USD'] = floatval((string) $cur->ForexSelling);
+            } elseif ($code === 'EUR') {
+                $rates['EUR'] = floatval((string) $cur->ForexSelling);
+            }
+        }
+
+        // Cache
+        file_put_contents($cacheFile, json_encode($rates));
+    } catch (Exception $e) {
+        // Sessiz hata
+    }
+
+    return $rates;
+}

@@ -26,10 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $cartItems = getCartItems();
 $subtotal = getCartTotal();
+$kdvRate = 0.20; // %20 KDV
+$kdvAmount = round($subtotal * $kdvRate, 2);
 $shippingCost = floatval(getSetting('shipping_cost', 49.90));
 $freeShippingLimit = floatval(getSetting('free_shipping_limit', 2000));
 $shipping = $subtotal >= $freeShippingLimit ? 0 : $shippingCost;
-$total = $subtotal + $shipping;
+$total = $subtotal + $kdvAmount + $shipping;
 ?>
 
 <div class="container" style="padding:32px 20px;">
@@ -119,9 +121,11 @@ $total = $subtotal + $shipping;
                 <h3><i class="fas fa-receipt"></i> Sipariş Özeti</h3>
                 <div class="cart-summary-row">
                     <span>Ara Toplam</span>
-                    <span>
-                        <?= formatPrice($subtotal) ?>
-                    </span>
+                    <span><?= formatPrice($subtotal) ?></span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>KDV (%20)</span>
+                    <span><?= formatPrice($kdvAmount) ?></span>
                 </div>
                 <div class="cart-summary-row">
                     <span>Kargo</span>
@@ -135,10 +139,9 @@ $total = $subtotal + $shipping;
                     </div>
                 <?php endif; ?>
                 <div class="cart-summary-row total">
-                    <span>Genel Toplam</span>
-                    <span>
-                        <?= formatPrice($total) ?>
-                    </span>
+                    <span>Genel Toplam <small style="font-weight:400;font-size:0.7rem;color:var(--gray)">(KDV
+                            Dahil)</small></span>
+                    <span><?= formatPrice($total) ?></span>
                 </div>
                 <a href="<?= BASE_URL ?>/checkout.php" class="btn btn-primary btn-lg btn-block" style="margin-top:16px">
                     <i class="fas fa-lock"></i> Siparişi Tamamla

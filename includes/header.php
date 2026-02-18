@@ -93,35 +93,6 @@
                 <li><a href="<?= BASE_URL ?>/"
                         class="<?= basename($_SERVER['PHP_SELF']) == 'index.php' && !isset($_GET['page']) ? 'active' : '' ?>"><i
                             class="fas fa-home"></i> Ana Sayfa</a></li>
-                <li class="has-mega">
-                    <a href="<?= BASE_URL ?>/products.php"><i class="fas fa-th-large"></i> Kategoriler <i
-                            class="fas fa-chevron-down" style="font-size:10px"></i></a>
-                    <div class="mega-dropdown">
-                        <div class="mega-grid">
-                            <?php
-                            $navCategories = getCategories();
-                            foreach ($navCategories as $cat):
-                                $subCats = getSubCategories($cat['id']);
-                                ?>
-                                <div class="mega-col">
-                                    <a href="<?= BASE_URL ?>/products.php?category=<?= e($cat['slug']) ?>"
-                                        class="mega-parent">
-                                        <i class="<?= e($cat['icon']) ?>"></i> <?= e($cat['name']) ?>
-                                    </a>
-                                    <?php if (!empty($subCats)): ?>
-                                        <ul class="mega-subs">
-                                            <?php foreach ($subCats as $sub): ?>
-                                                <li><a
-                                                        href="<?= BASE_URL ?>/products.php?category=<?= e($sub['slug']) ?>"><?= e($sub['name']) ?></a>
-                                                </li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </li>
                 <li><a href="<?= BASE_URL ?>/products.php"><i class="fas fa-box-open"></i> Tüm Ürünler</a></li>
                 <li><a href="<?= BASE_URL ?>/products.php?featured=1"><i class="fas fa-star"></i> Öne Çıkanlar</a></li>
                 <li><a href="<?= BASE_URL ?>/products.php?sort=newest"><i class="fas fa-bolt"></i> Yeni Ürünler</a></li>

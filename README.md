@@ -1,0 +1,217 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge" />
+</p>
+
+<h1 align="center">🛒 V-Commerce</h1>
+<p align="center">
+  <b>Modern, Hızlı ve Güvenli E-Ticaret Platformu</b><br/>
+  <sub>PHP & MySQL ile geliştirilmiş, tam özellikli açık kaynak e-ticaret çözümü</sub>
+</p>
+
+<p align="center">
+  <a href="#-özellikler">Özellikler</a> •
+  <a href="#-kurulum">Kurulum</a> •
+  <a href="#-ekran-görüntüleri">Ekran Görüntüleri</a> •
+  <a href="#-teknolojiler">Teknolojiler</a> •
+  <a href="#-changelog">Changelog</a>
+</p>
+
+---
+
+## ✨ Özellikler
+
+### 🏪 Mağaza (Frontend)
+| Özellik | Açıklama |
+|---------|----------|
+| 🏠 **Modern Anasayfa** | Hero slider, kategori kartları, öne çıkan ürünler |
+| 📦 **Ürün Detay** | Yapışkan galeri, zoom efekti, sekmeli açıklama, benzer ürünler |
+| 🔍 **Arama & Filtreleme** | Kategori, marka ve fiyat aralığına göre filtreleme |
+| 🛒 **Sepet Sistemi** | Miktar güncelleme, KDV hesaplama, kargo ücreti |
+| 💳 **Ödeme** | Kapıda ödeme, havale/EFT, PayTR entegrasyonu (hazır) |
+| 👤 **Müşteri Paneli** | Siparişler, adresler, profil yönetimi |
+| 📱 **Responsive Tasarım** | Tüm cihazlarda mükemmel görünüm |
+
+### 🔧 Admin Paneli
+| Özellik | Açıklama |
+|---------|----------|
+| 📊 **Dashboard** | Satış istatistikleri, günlük özet |
+| 📋 **Ürün Yönetimi** | CRUD, toplu düzenleme |
+| 📂 **Kategori Yönetimi** | Hiyerarşik alt kategori desteği |
+| 📥 **XML Import** | URL/dosya import, çoklu format desteği |
+| 💱 **Döviz Kuru** | TCMB entegrasyonu, otomatik USD/EUR → TRY çevirisi |
+| 📈 **%20 Kâr Marjı** | XML fiyatlarına otomatik eklenen kâr oranı |
+| 👥 **Kullanıcı Yönetimi** | Müşteriler, roller |
+| 📦 **Sipariş Yönetimi** | Durum takibi, detay görüntüleme |
+
+### 💰 Fiyatlandırma Sistemi
+```
+XML Fiyatı (USD) × TCMB Kuru × 1.20 (Kâr Marjı) = Satış Fiyatı (TL)
+Sepet: Ara Toplam + %20 KDV + Kargo = Genel Toplam
+```
+
+---
+
+## 🚀 Kurulum
+
+### Gereksinimler
+- PHP 8.0+
+- MySQL 8.0+ / MariaDB 10.5+
+- Apache (mod_rewrite)
+- XAMPP / WAMP / LAMP
+
+### Adımlar
+
+```bash
+# 1. Projeyi klonlayın
+git clone https://github.com/Sem-h/E-Commerce.git
+cd E-Commerce
+
+# 2. Veritabanı ayarlarını yapın
+# config/db.php dosyasını düzenleyin
+
+# 3. Kurulum sihirbazını çalıştırın
+# Tarayıcıda: http://localhost/E-Commerce/setup.php
+```
+
+### Varsayılan Giriş Bilgileri
+| Panel | URL | E-posta | Şifre |
+|-------|-----|---------|-------|
+| 🔧 Admin | `/admin/login.php` | `admin@vcommerce.com` | `admin123` |
+| 👤 Müşteri | `/client/login.php` | Kayıt olun | — |
+
+---
+
+## 🏗️ Proje Yapısı
+
+```
+E-Ticaret/
+├── admin/                  # Admin paneli
+│   ├── includes/           # Admin header, footer, sidebar
+│   ├── index.php           # Dashboard
+│   ├── products.php        # Ürün yönetimi
+│   ├── categories.php      # Kategori yönetimi
+│   ├── orders.php          # Sipariş yönetimi
+│   ├── users.php           # Kullanıcı yönetimi
+│   └── xml-import.php      # XML import (TCMB kuru)
+├── ajax/                   # AJAX endpointleri
+│   ├── cart.php             # Sepet işlemleri
+│   └── wishlist.php         # Favori işlemleri
+├── assets/
+│   ├── css/                # Stylesheet'ler
+│   │   ├── style.css       # Ana tema
+│   │   ├── components.css  # Bileşen stilleri
+│   │   ├── layout.css      # Layout stilleri
+│   │   └── admin.css       # Admin panel stili
+│   ├── js/                 # JavaScript dosyaları
+│   └── uploads/            # Yüklenen dosyalar
+├── client/                 # Müşteri paneli
+│   ├── includes/           # Panel sidebar
+│   ├── orders.php          # Siparişlerim
+│   ├── addresses.php       # Adreslerim
+│   └── profile.php         # Profil ayarları
+├── config/
+│   ├── config.php          # Ana konfigürasyon
+│   └── db.php              # Veritabanı bağlantısı
+├── includes/
+│   ├── header.php          # Site header
+│   ├── footer.php          # Site footer
+│   ├── functions.php       # Yardımcı fonksiyonlar
+│   └── product-card.php    # Ürün kartı bileşeni
+├── index.php               # Anasayfa
+├── products.php            # Ürün listesi
+├── product-detail.php      # Ürün detay sayfası
+├── cart.php                # Sepet
+├── checkout.php            # Sipariş tamamlama
+├── search.php              # Arama
+└── setup.php               # Kurulum sihirbazı
+```
+
+---
+
+## 🛠️ Teknolojiler
+
+<table>
+<tr>
+<td align="center"><b>Backend</b></td>
+<td align="center"><b>Frontend</b></td>
+<td align="center"><b>Veritabanı</b></td>
+<td align="center"><b>Entegrasyon</b></td>
+</tr>
+<tr>
+<td>PHP 8.x</td>
+<td>HTML5 / CSS3</td>
+<td>MySQL 8.0</td>
+<td>TCMB XML API</td>
+</tr>
+<tr>
+<td>PDO</td>
+<td>Vanilla JS</td>
+<td>PDO Prepared</td>
+<td>PayTR (hazır)</td>
+</tr>
+<tr>
+<td>Session Auth</td>
+<td>Font Awesome 6</td>
+<td>Foreign Keys</td>
+<td>XML Import</td>
+</tr>
+</table>
+
+---
+
+## 📋 Changelog
+
+### v2.0.0 — 18 Şubat 2026
+> 🎯 **Büyük Güncelleme — Fiyatlandırma & Tasarım**
+
+#### 💱 Döviz & Fiyatlandırma
+- ✅ TCMB'den canlı USD/EUR kuru çekme (5dk cache)
+- ✅ XML import'ta otomatik kur çevirisi (USD → TRY)
+- ✅ %20 kâr marjı otomatik ekleme
+- ✅ Sepette %20 KDV hesaplama
+- ✅ Fiyat para birimi seçimi (TRY / USD / EUR)
+
+#### 🎨 Ürün Detay Sayfası Yeniden Tasarım
+- ✅ Yapışkan galeri + hover zoom efekti
+- ✅ Gradient fiyat kutusu + tasarruf gösterimi
+- ✅ Marka rozeti (tıklanabilir)
+- ✅ Modern miktar seçici + favori butonu
+- ✅ Güvence kartları (Ücretsiz Kargo, Güvenli Ödeme, Kolay İade)
+- ✅ Sekmeli açıklama (Ürün Açıklaması / Teknik Özellikler)
+- ✅ HTML tablo formatı (zebra-stripe)
+
+#### 🔤 Encoding Düzeltmeleri
+- ✅ HTML entity decode (ürün adları & açıklamalar)
+- ✅ 232 ürün adı + 1429 kısa açıklama düzeltildi
+- ✅ Import script'te otomatik decode
+
+---
+
+### v1.0.0 — 17 Şubat 2026
+> 🚀 **İlk Sürüm**
+
+- ✅ E-ticaret altyapısı (ürün, sepet, sipariş)
+- ✅ Admin paneli (dashboard, ürün/kategori/sipariş yönetimi)
+- ✅ Müşteri paneli (siparişler, adresler, profil)
+- ✅ XML ürün import (dosya & URL)
+- ✅ Hiyerarşik kategori sistemi (alt kategoriler)
+- ✅ Mega menü & sidebar navigasyonu
+- ✅ Responsive tasarım
+- ✅ Arama & filtreleme (kategori, marka, fiyat)
+- ✅ Kurulum sihirbazı (setup.php)
+
+---
+
+## 📄 Lisans
+
+Bu proje **MIT Lisansı** ile lisanslanmıştır.
+
+---
+
+<p align="center">
+  <sub>⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!</sub><br/>
+  <sub>Built with ❤️ by <b>Semih Akbaş</b></sub>
+</p>

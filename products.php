@@ -99,84 +99,99 @@ $categories = getCategories();
     </div>
 
     <div class="shop-layout">
-        <!-- Sidebar -->
         <aside class="shop-sidebar">
-            <form method="GET" action="">
-                <div class="filter-group">
-                    <h4><i class="fas fa-list"></i> Kategoriler</h4>
+            <!-- Kategori Ağacı (Ana sayfa ile aynı) -->
+            <div class="home-sidebar" style="margin-bottom:16px">
+                <div class="sidebar-cat-header">
+                    <i class="fas fa-bars"></i> Kategoriler
+                </div>
+                <nav class="sidebar-cat-tree">
                     <?php
                     $allMainCats = getCategories();
-                    foreach ($allMainCats as $cat):
-                        $subCats = getSubCategories($cat['id']);
-                        $isParentActive = ($categorySlug == $cat['slug']);
-                        // Alt kategorilerden biri seçili mi kontrol et
+                    foreach ($allMainCats as $mcat):
+                        $subCats = getSubCategories($mcat['id']);
+                        $isParentActive = ($categorySlug == $mcat['slug']);
                         $isChildActive = false;
                         foreach ($subCats as $sub) {
-                            if ($categorySlug == $sub['slug']) { $isChildActive = true; break; }
+                            if ($categorySlug == $sub['slug']) {
+                                $isChildActive = true;
+                                break;
+                            }
                         }
                         $isOpen = $isParentActive || $isChildActive;
-                    ?>
-                        <div class="cat-tree-item <?= $isOpen ? 'open' : '' ?>">
-                            <div class="cat-tree-parent">
-                                <label>
-                                    <input type="radio" name="category" value="<?= e($cat['slug']) ?>"
-                                        <?= $isParentActive ? 'checked' : '' ?> onchange="this.form.submit()">
-                                    <strong><?= e($cat['name']) ?></strong>
-                                    <span class="cat-count">(<?= getCategoryProductCount($cat['id']) ?>)</span>
-                                </label>
-                                <?php if (!empty($subCats)): ?>
-                                    <button type="button" class="cat-toggle" onclick="this.closest('.cat-tree-item').classList.toggle('open')">
-                                        <i class="fas fa-chevron-down"></i>
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+                        ?>
+                        <div
+                            class="sidebar-cat-item <?= !empty($subCats) ? 'has-children' : '' ?> <?= $isOpen ? 'open' : '' ?>">
                             <?php if (!empty($subCats)): ?>
-                                <div class="cat-tree-children">
+                                <div class="sidebar-cat-link <?= $isParentActive ? 'active-cat' : '' ?>"
+                                    onclick="this.parentElement.classList.toggle('open')" style="cursor:pointer">
+                                    <i class="<?= e($mcat['icon']) ?>"></i>
+                                    <span><?= e($mcat['name']) ?></span>
+                                    <i class="fas fa-chevron-down sidebar-cat-arrow"></i>
+                                </div>
+                                <div class="sidebar-cat-sub">
+                                    <a href="<?= BASE_URL ?>/products.php?category=<?= e($mcat['slug']) ?>"
+                                        class="sidebar-sub-viewall <?= $isParentActive ? 'active-cat' : '' ?>">
+                                        <i class="fas fa-th-large"></i> Tümünü Gör
+                                    </a>
                                     <?php foreach ($subCats as $sub): ?>
-                                        <label>
-                                            <input type="radio" name="category" value="<?= e($sub['slug']) ?>"
-                                                <?= $categorySlug == $sub['slug'] ? 'checked' : '' ?> onchange="this.form.submit()">
+                                        <a href="<?= BASE_URL ?>/products.php?category=<?= e($sub['slug']) ?>"
+                                            class="<?= $categorySlug == $sub['slug'] ? 'active-cat' : '' ?>">
                                             <?= e($sub['name']) ?>
-                                        </label>
+                                        </a>
                                     <?php endforeach; ?>
                                 </div>
+                            <?php else: ?>
+                                <a href="<?= BASE_URL ?>/products.php?category=<?= e($mcat['slug']) ?>"
+                                    class="sidebar-cat-link <?= $isParentActive ? 'active-cat' : '' ?>">
+                                    <i class="<?= e($mcat['icon']) ?>"></i>
+                                    <span><?= e($mcat['name']) ?></span>
+                                </a>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
+                </nav>
+                <?php if ($categorySlug): ?>
+                    <a href="<?= BASE_URL ?>/products.php"
+                        style="display:block;text-align:center;padding:8px;font-size:0.75rem;color:var(--danger);border-top:1px solid var(--gray-200)">✕
+                        Filtreyi Temizle</a>
+                <?php endif; ?>
+            </div>
+
+            <!-- Fiyat & Marka Filtreleri -->
+            <div
+                style="background:var(--white);border-radius:var(--radius-lg);padding:16px;border:1px solid var(--gray-200)">
+                <form method="GET" action="">
                     <?php if ($categorySlug): ?>
-                        <a href="<?= BASE_URL ?>/products.php"
-                            style="font-size:0.75rem;color:var(--danger);margin-top:8px;display:block">✕ Filtreyi
-                            Temizle</a>
+                        <input type="hidden" name="category" value="<?= e($categorySlug) ?>">
                     <?php endif; ?>
-                </div>
+                    <input type="hidden" name="sort" value="<?= e($sort) ?>">
+                    <?php if ($featured): ?><input type="hidden" name="featured" value="1"><?php endif; ?>
 
-                <div class="filter-group">
-                    <h4><i class="fas fa-tag"></i> Fiyat Aralığı</h4>
-                    <div class="price-range">
-                        <input type="number" name="min_price" placeholder="Min" value="<?= e($minPrice) ?>">
-                        <span>-</span>
-                        <input type="number" name="max_price" placeholder="Max" value="<?= e($maxPrice) ?>">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm btn-block"
-                        style="margin-top:10px">Uygula</button>
-                </div>
-
-                <?php if (!empty($brands)): ?>
                     <div class="filter-group">
-                        <h4><i class="fas fa-building"></i> Markalar</h4>
-                        <?php foreach (array_slice($brands, 0, 10) as $b): ?>
-                            <label>
-                                <input type="radio" name="brand" value="<?= e($b['brand']) ?>" <?= $brand == $b['brand'] ? 'checked' : '' ?> onchange="this.form.submit()">
-                                <?= e($b['brand']) ?>
-                            </label>
-                        <?php endforeach; ?>
+                        <h4><i class="fas fa-tag"></i> Fiyat Aralığı</h4>
+                        <div class="price-range">
+                            <input type="number" name="min_price" placeholder="Min" value="<?= e($minPrice) ?>">
+                            <span>-</span>
+                            <input type="number" name="max_price" placeholder="Max" value="<?= e($maxPrice) ?>">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm btn-block"
+                            style="margin-top:10px">Uygula</button>
                     </div>
-                <?php endif; ?>
 
-                <input type="hidden" name="sort" value="<?= e($sort) ?>">
-                <?php if ($featured): ?><input type="hidden" name="featured" value="1">
-                <?php endif; ?>
-            </form>
+                    <?php if (!empty($brands)): ?>
+                        <div class="filter-group">
+                            <h4><i class="fas fa-building"></i> Markalar</h4>
+                            <?php foreach (array_slice($brands, 0, 10) as $b): ?>
+                                <label>
+                                    <input type="radio" name="brand" value="<?= e($b['brand']) ?>" <?= $brand == $b['brand'] ? 'checked' : '' ?> onchange="this.form.submit()">
+                                    <?= e($b['brand']) ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </form>
+            </div>
         </aside>
 
         <!-- Products -->

@@ -35,7 +35,7 @@ $imageUrl = getImageUrl($product['image']);
         <?php endif; ?>
         <h3 class="product-title">
             <a href="<?= BASE_URL ?>/product-detail.php?slug=<?= e($product['slug']) ?>">
-                <?= e($product['name']) ?>
+                <?= htmlspecialchars(html_entity_decode($product['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?>
             </a>
         </h3>
         <?php if (!empty($product['short_description'])): ?>

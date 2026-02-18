@@ -61,6 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // XML Parse & Import
+    // Kur çevirisi
+    $currency = $_POST['currency'] ?? 'TRY';
+    $exchangeRate = floatval($_POST['exchange_rate'] ?? 1);
+    if ($exchangeRate <= 0)
+        $exchangeRate = 1;
+    if ($currency === 'TRY')
+        $exchangeRate = 1; // TRY ise çevirme
+
     if ($xml) {
         $imported = 0;
         $updated = 0;
@@ -91,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Fiyat
                 $price = floatval(str_replace(',', '.', (string) ($item->fiyat ?? $item->fiyat_tl ?? $item->price ?? $item->salePrice ?? $item->listPrice ?? 0)));
+                $price = round($price * $exchangeRate * 1.20, 2); // Kur çevirisi + %20 kâr marjı
 
                 if (empty($name) || $price <= 0) {
                     $errors++;
@@ -111,6 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // İndirimli Fiyat
                 $discountPrice = floatval(str_replace(',', '.', (string) ($item->indirimli_fiyat ?? $item->discount_price ?? $item->discountedPrice ?? $item->satisFiyati ?? 0))) ?: null;
+                if ($discountPrice)
+                    $discountPrice = round($discountPrice * $exchangeRate * 1.20, 2); // Kur + %20 kâr
                 if ($discountPrice && $discountPrice >= $price)
                     $discountPrice = null;
 
@@ -294,6 +305,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $imports = Database::fetchAll("SELECT * FROM xml_imports ORDER BY created_at DESC LIMIT 20");
+$tcmbRates = getTCMBRates();
+$usdRate = $tcmbRates['USD'] ?: 43.67;
+$eurRate = $tcmbRates['EUR'] ?: 51.69;
 ?>
 
 <div class="admin-header">
@@ -318,6 +332,30 @@ $imports = Database::fetchAll("SELECT * FROM xml_imports ORDER BY created_at DES
             <label>XML Feed URL'si</label>
             <input type="url" name="xml_url" class="form-control" placeholder="https://ornek.com/urunler.xml" required>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div class="form-group" style="margin-bottom:0">
+                <label>Fiyat Para Birimi</label>
+                <select name="currency" class="form-control" onchange="toggleRate(this,'rateUrl')">
+                    <option value="TRY">₺ TRY (Türk Lirası)</option>
+                    <option value="USD" selected>$ USD (Amerikan Doları)</option>
+                    <option value="EUR">€ EUR (Euro)</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0" id="rateUrl">
+                <label>Döviz Kuru (1 USD = ? TL)</label>
+                <input type="number" name="exchange_rate" class="form-control" value="<?= $usdRate ?>" step="0.01"
+                    min="0.01" id="rateUrlInput" data-usd="<?= $usdRate ?>" data-eur="<?= $eurRate ?>">
+            </div>
+        </div>
+        <?php if ($tcmbRates['date']): ?>
+            <div
+                style="padding:10px 14px;background:#ecfdf5;border-radius:8px;margin-bottom:12px;border:1px solid #a7f3d0;display:flex;align-items:center;gap:8px">
+                <i class="fas fa-university" style="color:#059669"></i>
+                <span style="font-size:0.775rem;color:#065f46"><strong>TCMB Güncel Kur (<?= $tcmbRates['date'] ?>):</strong>
+                    1 USD = <?= number_format($usdRate, 4, ',', '.') ?> ₺ &nbsp;|&nbsp; 1 EUR =
+                    <?= number_format($eurRate, 4, ',', '.') ?> ₺</span>
+            </div>
+        <?php endif; ?>
         <div style="padding:12px 16px;background:#f0f7ff;border-radius:8px;margin-bottom:16px;border:1px solid #bfdbfe">
             <p style="font-size:0.8125rem;color:#1e40af;margin:0"><i class="fas fa-info-circle"></i> <strong>Desteklenen
                     XML Formatları:</strong></p>
@@ -349,6 +387,30 @@ $imports = Database::fetchAll("SELECT * FROM xml_imports ORDER BY created_at DES
             <label>XML Dosyası Seçin</label>
             <input type="file" name="xml_file" class="form-control" accept=".xml" required>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div class="form-group" style="margin-bottom:0">
+                <label>Fiyat Para Birimi</label>
+                <select name="currency" class="form-control" onchange="toggleRate(this,'rateFile')">
+                    <option value="TRY">₺ TRY (Türk Lirası)</option>
+                    <option value="USD" selected>$ USD (Amerikan Doları)</option>
+                    <option value="EUR">€ EUR (Euro)</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0" id="rateFile">
+                <label>Döviz Kuru (1 USD = ? TL)</label>
+                <input type="number" name="exchange_rate" class="form-control" value="<?= $usdRate ?>" step="0.01"
+                    min="0.01" id="rateFileInput" data-usd="<?= $usdRate ?>" data-eur="<?= $eurRate ?>">
+            </div>
+        </div>
+        <?php if ($tcmbRates['date']): ?>
+            <div
+                style="padding:10px 14px;background:#ecfdf5;border-radius:8px;margin-bottom:12px;border:1px solid #a7f3d0;display:flex;align-items:center;gap:8px">
+                <i class="fas fa-university" style="color:#059669"></i>
+                <span style="font-size:0.775rem;color:#065f46"><strong>TCMB Kur (<?= $tcmbRates['date'] ?>):</strong> 1 USD
+                    = <?= number_format($usdRate, 4, ',', '.') ?> ₺ &nbsp;|&nbsp; 1 EUR =
+                    <?= number_format($eurRate, 4, ',', '.') ?> ₺</span>
+            </div>
+        <?php endif; ?>
         <p style="font-size:0.8rem;color:var(--admin-gray);margin-bottom:16px">
             <i class="fas fa-info-circle"></i> Bilgisayarınızdan XML dosyası seçerek import edebilirsiniz.
         </p>
@@ -415,6 +477,21 @@ $imports = Database::fetchAll("SELECT * FROM xml_imports ORDER BY created_at DES
         btn.disabled = true;
         btn.style.opacity = '0.7';
     });
+
+    function toggleRate(sel, rateId) {
+        const rateDiv = document.getElementById(rateId);
+        const input = rateDiv.querySelector('input');
+        if (sel.value === 'TRY') {
+            rateDiv.style.display = 'none';
+        } else {
+            rateDiv.style.display = 'block';
+            rateDiv.querySelector('label').textContent = 'Döviz Kuru (1 ' + sel.value + ' = ? TL)';
+            // TCMB kurunu otomatik doldur
+            if (input && input.dataset) {
+                input.value = sel.value === 'EUR' ? input.dataset.eur : input.dataset.usd;
+            }
+        }
+    }
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
