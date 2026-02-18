@@ -6,7 +6,7 @@
 
 $host = 'localhost';
 $username = 'root';
-$password = 'rexe2026';
+$password = '';
 $dbname = 'vcommerce';
 
 // Hata raporlama
@@ -183,9 +183,9 @@ try {
     // ==================== DEMO VERİLER ====================
 
     // Admin kullanıcı
-    $adminPass = password_hash('SS44723646bb!!..', PASSWORD_DEFAULT);
+    $adminPass = password_hash('admin123', PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("INSERT IGNORE INTO `users` (username, email, password, first_name, last_name, role, status) VALUES (?, ?, ?, ?, ?, 'admin', 1)");
-    $stmt->execute(['administrator', 'semih@mynet.com', $adminPass, 'Admin', 'V-Commerce']);
+    $stmt->execute(['admin', 'admin@vcommerce.com', $adminPass, 'Admin', 'V-Commerce']);
 
     // Demo müşteri
     $customerPass = password_hash('123456', PASSWORD_DEFAULT);
@@ -268,7 +268,7 @@ try {
     $settings = [
         ['site_name', 'V-Commerce'],
         ['site_description', 'Elektronik Ürünlerde Güvenilir Alışveriş'],
-        ['site_email', 'semih@mynet.com'],
+        ['site_email', 'info@vcommerce.com'],
         ['site_phone', '+90 555 000 00 00'],
         ['site_address', 'İstanbul, Türkiye'],
         ['currency', 'TRY'],
@@ -294,7 +294,7 @@ try {
 
     echo "<hr><h2 style='color:green'>🎉 Kurulum tamamlandı!</h2>";
     echo "<p><a href='index.php'>🏠 Ana Sayfaya Git</a> | <a href='admin/login.php'>🔑 Admin Paneli</a></p>";
-    echo "<p><strong>Admin:</strong> administrator / SS44723646bb!!..</p>";
+    echo "<p><strong>Admin:</strong> admin / admin123</p>";
     echo "<p><strong>Demo Müşteri:</strong> demo / 123456</p>";
 
 } catch (PDOException $e) {

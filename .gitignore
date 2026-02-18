@@ -20,3 +20,7 @@ Thumbs.db
 # Uploads
 uploads/*
 !uploads/.gitkeep
+
+# Config (user-specific)
+config/db.php
+config/.installed

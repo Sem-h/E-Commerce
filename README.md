@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-2.0.4-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.0.6-blue?style=for-the-badge" />
 </p>
 
 <h1 align="center">🛒 V-Commerce</h1>
@@ -68,27 +68,26 @@ Sepet: Ara Toplam + %20 KDV + Kargo = Genel Toplam
 - PHP 8.0+
 - MySQL 8.0+ / MariaDB 10.5+
 - Apache (mod_rewrite)
-- XAMPP / WAMP / LAMP
 
 ### Adımlar
 
 ```bash
 # 1. Projeyi klonlayın
 git clone https://github.com/Sem-h/E-Commerce.git
-cd E-Commerce
 
-# 2. Veritabanı ayarlarını yapın
-# config/db.php dosyasını düzenleyin
+# 2. Dosyaları sunucuya yükleyin (FTP veya dosya yöneticisi)
 
-# 3. Kurulum sihirbazını çalıştırın
-# Tarayıcıda: http://localhost/E-Commerce/setup.php
+# 3. Kurulum sihirbazını başlatın
+# Tarayıcıda: https://siteadresiniz.com/install.php
 ```
 
-### Varsayılan Giriş Bilgileri
-| Panel | URL | E-posta | Şifre |
-|-------|-----|---------|-------|
-| 🔧 Admin | `/admin/login.php` | `admin@vcommerce.com` | `admin123` |
-| 👤 Müşteri | `/client/login.php` | Kayıt olun | — |
+Kurulum sihirbazı sizi 3 adımda yönlendirecektir:
+
+1. **Sistem Kontrolü** — PHP sürümü, gerekli eklentiler ve dizin izinleri kontrol edilir
+2. **Veritabanı & Admin** — MySQL bilgileri, yönetici hesabı ve site adı belirlenir
+3. **Tamamlandı** — Kurulum biter, admin paneline yönlendirilirsiniz
+
+> ⚠️ Kurulum sonrası güvenlik için `install.php` ve `setup.php` dosyalarını silmeniz önerilir.
 
 ---
 
@@ -199,6 +198,33 @@ E-Ticaret/
 - ✅ HTML entity decode (ürün adları & açıklamalar)
 - ✅ 232 ürün adı + 1429 kısa açıklama düzeltildi
 - ✅ Import script'te otomatik decode
+
+---
+
+### v2.0.6 — 19 Şubat 2026
+> 🔧 **Kurulum Sistemi İyileştirme**
+
+#### 🛠️ Install Wizard Güncelleme
+- ✅ Eksik 4 tablo eklendi: `campaigns`, `campaign_usage`, `sliders`, `price_alerts`
+- ✅ Eksik 6 kolon eklendi: `discount_amount`, `campaign_id`, `home_delivery`, `delivery_fee`, `shipping_neighborhood`, `neighborhood`
+- ✅ Yeni kurulumda tüm özellikler tek seferde hazır
+
+#### 🔒 Güvenlik
+- ✅ `setup.php`'den kişisel bilgiler temizlendi
+- ✅ `config/db.php` ve `config/.installed` gitignore'a eklendi
+- ✅ Hassas veriler artık GitHub'a gönderilmiyor
+
+---
+
+### v2.0.5 — 19 Şubat 2026
+> 🚀 **Kurulum Sihirbazı**
+
+- ✅ 3 adımlı kurulum sihirbazı (`install.php`)
+- ✅ Sistem gereksinim kontrolü (PHP, PDO, dizin izinleri)
+- ✅ Veritabanı + admin hesabı + site ayarları formu
+- ✅ `config/db.php` otomatik oluşturma
+- ✅ Kurulum kilit dosyası (yeniden çalışma koruması)
+- ✅ README güncelleme (siteadresiniz.com formatı)
 
 ---
 
