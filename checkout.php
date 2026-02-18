@@ -10,16 +10,69 @@ if (empty($cartItems)) {
 }
 
 $subtotal = getCartTotal();
+
+// Kupon indirimi
+$couponDiscount = 0;
+$appliedCoupon = $_SESSION['coupon'] ?? null;
+$campaignId = null;
+if ($appliedCoupon) {
+    try {
+        $campaign = Database::fetch("SELECT * FROM campaigns WHERE id = ? AND status = 1", [$appliedCoupon['campaign_id']]);
+        if ($campaign) {
+            $disc = 0;
+            if ($campaign['discount_percent'] > 0) {
+                $disc = round($subtotal * $campaign['discount_percent'] / 100, 2);
+            } elseif ($campaign['discount_amount'] > 0) {
+                $disc = $campaign['discount_amount'];
+            }
+            if ($campaign['max_discount'] > 0 && $disc > $campaign['max_discount'])
+                $disc = $campaign['max_discount'];
+            if ($disc > $subtotal)
+                $disc = $subtotal;
+            $couponDiscount = $disc;
+            $campaignId = $campaign['id'];
+        } else {
+            unset($_SESSION['coupon']);
+            $appliedCoupon = null;
+        }
+    } catch (Exception $e) {
+    }
+}
+
 $kdvRate = 0.20;
 $kdvAmount = round($subtotal * $kdvRate, 2);
 $shippingCost = floatval(getSetting('shipping_cost', 49.90));
 $freeShippingLimit = floatval(getSetting('free_shipping_limit', 2000));
 $shipping = $subtotal >= $freeShippingLimit ? 0 : $shippingCost;
-$total = $subtotal + $kdvAmount + $shipping;
+$total = $subtotal + $kdvAmount + $shipping - $couponDiscount;
+if ($total < 0)
+    $total = 0;
 $user = currentUser();
 
 // Adresler
 $addresses = Database::fetchAll("SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC", [$_SESSION['user_id']]);
+
+// Mahalle ve ilçe alanlarını orders tablosuna ekle
+try {
+    Database::query("ALTER TABLE orders ADD COLUMN shipping_neighborhood VARCHAR(100) DEFAULT '' AFTER shipping_district");
+} catch (Exception $e) {
+}
+try {
+    Database::query("ALTER TABLE orders ADD COLUMN home_delivery TINYINT(1) DEFAULT 0 AFTER notes");
+} catch (Exception $e) {
+}
+try {
+    Database::query("ALTER TABLE orders ADD COLUMN delivery_fee DECIMAL(10,2) DEFAULT 0 AFTER home_delivery");
+} catch (Exception $e) {
+}
+
+// Adrese teslim ayarları
+$deliveryEnabled = getSetting('delivery_enabled', '0') === '1';
+$deliveryCity = getSetting('delivery_city', 'Bursa');
+$deliveryFee = floatval(getSetting('delivery_fee', 250));
+$deliveryTitle = getSetting('delivery_title', 'Adresinize Teslim');
+$deliveryDesc = getSetting('delivery_description', 'Gün içinde adresinize teslimat');
+$deliveryDistricts = getSetting('delivery_districts', '');
 
 // Sipariş oluştur
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,8 +86,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'address' => $_POST['address'] ?? '',
         'city' => $_POST['city'] ?? '',
         'district' => $_POST['district'] ?? '',
+        'neighborhood' => $_POST['neighborhood'] ?? '',
         'zip' => $_POST['zip_code'] ?? '',
     ];
+
+    // Adrese teslim seçeneği
+    $homeDelivery = isset($_POST['home_delivery']) ? 1 : 0;
+    $orderDeliveryFee = 0;
+    if ($homeDelivery && $deliveryEnabled && strtolower(trim($shippingData['city'])) === strtolower(trim($deliveryCity))) {
+        $orderDeliveryFee = $deliveryFee;
+        // İlçe kontrolü
+        if (!empty($deliveryDistricts)) {
+            $allowedDistricts = array_map('trim', array_map('mb_strtolower', explode(',', $deliveryDistricts)));
+            if (!in_array(mb_strtolower(trim($shippingData['district'])), $allowedDistricts)) {
+                $orderDeliveryFee = 0;
+                $homeDelivery = 0;
+            }
+        }
+        $total += $orderDeliveryFee;
+    } else {
+        $homeDelivery = 0;
+    }
 
     // Validasyon
     if (empty($shippingData['first_name']) || empty($shippingData['address']) || empty($shippingData['city']) || empty($shippingData['phone'])) {
@@ -42,14 +114,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Sipariş oluştur
         Database::query(
-            "INSERT INTO orders (user_id, order_number, subtotal, shipping_cost, total, status, payment_method, payment_status,
-             shipping_first_name, shipping_last_name, shipping_phone, shipping_address, shipping_city, shipping_district, shipping_zip, notes)
-             VALUES (?, ?, ?, ?, ?, 'pending', ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO orders (user_id, order_number, subtotal, shipping_cost, discount_amount, campaign_id, total, status, payment_method, payment_status,
+             shipping_first_name, shipping_last_name, shipping_phone, shipping_address, shipping_city, shipping_district, shipping_neighborhood, shipping_zip, notes, home_delivery, delivery_fee)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $_SESSION['user_id'],
                 $orderNumber,
                 $subtotal,
                 $shipping,
+                $couponDiscount,
+                $campaignId,
                 $total,
                 $paymentMethod,
                 $shippingData['first_name'],
@@ -58,11 +132,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $shippingData['address'],
                 $shippingData['city'],
                 $shippingData['district'],
+                $shippingData['neighborhood'],
                 $shippingData['zip'],
-                $_POST['notes'] ?? ''
+                $_POST['notes'] ?? '',
+                $homeDelivery,
+                $orderDeliveryFee
             ]
         );
         $orderId = Database::lastInsertId();
+
+        // Kampanya kullanım kaydı
+        if ($campaignId && $couponDiscount > 0) {
+            recordCampaignUsage($campaignId, $_SESSION['user_id'], $orderId, $couponDiscount);
+        }
 
         // Sipariş kalemleri
         foreach ($cartItems as $item) {
@@ -78,6 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Sepeti temizle
         clearCart();
+        unset($_SESSION['coupon']);
 
         // PayTR yönlendirme
         if ($paymentMethod === 'paytr') {
@@ -134,21 +217,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-row">
                         <div class="form-group">
                             <label>İl *</label>
-                            <input type="text" name="city" class="form-control"
-                                value="<?= e($addresses[0]['city'] ?? '') ?>" required>
+                            <select name="city" id="checkoutCity" class="form-control" required>
+                                <option value="">İl seçiniz...</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label>İlçe</label>
-                            <input type="text" name="district" class="form-control"
-                                value="<?= e($addresses[0]['district'] ?? '') ?>">
+                            <label>İlçe *</label>
+                            <select name="district" id="checkoutDistrict" class="form-control" required>
+                                <option value="">Önce il seçiniz...</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Posta Kodu</label>
-                        <input type="text" name="zip_code" class="form-control"
-                            value="<?= e($addresses[0]['zip_code'] ?? '') ?>">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mahalle/Cadde</label>
+                            <input type="text" name="neighborhood" class="form-control"
+                                value="<?= e($addresses[0]['neighborhood'] ?? '') ?>"
+                                placeholder="Mahalle veya cadde adı">
+                        </div>
+                        <div class="form-group">
+                            <label>Posta Kodu</label>
+                            <input type="text" name="zip_code" class="form-control"
+                                value="<?= e($addresses[0]['zip_code'] ?? '') ?>">
+                        </div>
                     </div>
                 </div>
+
+                <!-- Adrese Teslim Seçeneği -->
+                <?php if ($deliveryEnabled): ?>
+                    <div class="checkout-section" id="deliverySection" style="display:none">
+                        <h3><i class="fas fa-home" style="color:#3b82f6"></i> Teslimat Seçenekleri</h3>
+                        <label class="payment-method" id="deliveryOption"
+                            style="border:2px solid #93c5fd;background:linear-gradient(135deg,#eff6ff,#f0fdf4);cursor:pointer">
+                            <input type="checkbox" name="home_delivery" value="1" id="homeDeliveryCheck"
+                                style="width:20px;height:20px;accent-color:#3b82f6;flex-shrink:0">
+                            <div style="flex:1">
+                                <h4 style="display:flex;align-items:center;gap:8px">
+                                    <i class="fas fa-shipping-fast" style="color:#3b82f6"></i>
+                                    <?= e($deliveryTitle) ?>
+                                    <span
+                                        style="margin-left:auto;font-size:1rem;color:#059669;font-weight:700">+<?= formatPrice($deliveryFee) ?></span>
+                                </h4>
+                                <p style="font-size:0.8rem;color:var(--gray);margin:4px 0 0"><?= e($deliveryDesc) ?></p>
+                            </div>
+                        </label>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Ödeme Yöntemi -->
                 <div class="checkout-section">
@@ -215,16 +329,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span>KDV (%20)</span>
                         <span><?= formatPrice($kdvAmount) ?></span>
                     </div>
-                    <div class="cart-summary-row">
-                        <span>Kargo</span>
-                        <span>
+                    <div class="cart-summary-row" id="shippingRow">
+                        <span id="shippingLabel">Kargo</span>
+                        <span id="shippingValue">
                             <?= $shipping > 0 ? formatPrice($shipping) : '<span style="color:var(--success)">Ücretsiz</span>' ?>
                         </span>
                     </div>
                     <div class="cart-summary-row total">
                         <span>Genel Toplam <small style="font-weight:400;font-size:0.7rem;color:var(--gray)">(KDV
                                 Dahil)</small></span>
-                        <span><?= formatPrice($total) ?></span>
+                        <span id="grandTotal"><?= formatPrice($total) ?></span>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:16px">
                         <i class="fas fa-check"></i> Siparişi Onayla
@@ -238,13 +352,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 </div>
 
+<script src="<?= BASE_URL ?>/js/address-selector.js"></script>
 <script>
+    const BASE_URL = '<?= BASE_URL ?>';
+
+    // Checkout address selector
+    initAddressSelector('checkoutCity', 'checkoutDistrict', {
+        city: '<?= e($addresses[0]['city'] ?? '') ?>',
+        district: '<?= e($addresses[0]['district'] ?? '') ?>'
+    });
+
     document.querySelectorAll('.payment-method').forEach(pm => {
         pm.addEventListener('click', function () {
             document.querySelectorAll('.payment-method').forEach(p => p.classList.remove('selected'));
             this.classList.add('selected');
         });
     });
+
+    <?php if ($deliveryEnabled): ?>
+        // Adrese teslim: şehir kontrolü
+        const deliveryCity = '<?= e($deliveryCity) ?>';
+        const deliveryFee = <?= $deliveryFee ?>;
+        const deliveryDistricts = '<?= e($deliveryDistricts) ?>'.split(',').map(d => d.trim().toLowerCase()).filter(d => d);
+        const baseTotal = <?= $total ?>;
+        const deliverySection = document.getElementById('deliverySection');
+        const homeDeliveryCheck = document.getElementById('homeDeliveryCheck');
+        const grandTotal = document.getElementById('grandTotal');
+
+        function checkDeliveryEligibility() {
+            const selectedCity = document.getElementById('checkoutCity').value;
+            const selectedDistrict = document.getElementById('checkoutDistrict').value;
+            let eligible = selectedCity.toLowerCase() === deliveryCity.toLowerCase();
+
+            // İlçe kontrolü
+            if (eligible && deliveryDistricts.length > 0 && selectedDistrict) {
+                eligible = deliveryDistricts.includes(selectedDistrict.toLowerCase());
+            }
+
+            if (deliverySection) {
+                deliverySection.style.display = eligible ? 'block' : 'none';
+                if (!eligible && homeDeliveryCheck) {
+                    homeDeliveryCheck.checked = false;
+                    updateDeliveryTotal();
+                }
+            }
+        }
+
+        function updateDeliveryTotal() {
+            const checked = homeDeliveryCheck && homeDeliveryCheck.checked;
+            const shippingLabel = document.getElementById('shippingLabel');
+            const shippingValue = document.getElementById('shippingValue');
+            const shippingRow = document.getElementById('shippingRow');
+            const origShippingCost = <?= $shipping ?>;
+            const origShippingHtml = origShippingCost > 0 ? new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(origShippingCost) + ' \u20BA' : '<span style="color:var(--success)">Ücretsiz</span>';
+
+            if (checked) {
+                shippingLabel.innerHTML = '<i class="fas fa-home" style="margin-right:4px"></i> Adrese Teslim';
+                shippingValue.innerHTML = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(deliveryFee) + ' \u20BA';
+                shippingRow.style.color = '#3b82f6';
+                shippingRow.style.fontWeight = '600';
+            } else {
+                shippingLabel.textContent = 'Kargo';
+                shippingValue.innerHTML = origShippingHtml;
+                shippingRow.style.color = '';
+                shippingRow.style.fontWeight = '';
+            }
+
+            const shippingCost = checked ? deliveryFee : origShippingCost;
+            const newTotal = baseTotal - origShippingCost + shippingCost;
+            if (grandTotal) grandTotal.textContent = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(newTotal) + ' \u20BA';
+        }
+
+        document.getElementById('checkoutCity').addEventListener('change', () => {
+            setTimeout(checkDeliveryEligibility, 100);
+        });
+        document.getElementById('checkoutDistrict').addEventListener('change', checkDeliveryEligibility);
+        if (homeDeliveryCheck) homeDeliveryCheck.addEventListener('change', updateDeliveryTotal);
+
+        // İlk yüklemede kontrol
+        setTimeout(checkDeliveryEligibility, 800);
+    <?php endif; ?>
 </script>
 
 <?php require_once 'includes/footer.php'; ?>

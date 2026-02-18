@@ -46,6 +46,10 @@ $adminUser = currentUser();
                         <a href="<?= BASE_URL ?>/admin/settings.php"
                                 class="<?= ($adminPage ?? '') === 'settings' ? 'active' : '' ?>"><i
                                         class="fas fa-cog"></i> Ayarlar</a>
+                        <a href="<?= BASE_URL ?>/admin/delivery-settings.php"
+                                class="<?= ($adminPage ?? '') === 'delivery_settings' ? 'active' : '' ?>"
+                                style="padding-left:36px;font-size:0.8rem"><i class="fas fa-shipping-fast"></i> Adrese
+                                Teslim Ayarları</a>
                         <a href="<?= BASE_URL ?>/admin/xml-import.php"
                                 class="<?= ($adminPage ?? '') === 'xml' ? 'active' : '' ?>"><i
                                         class="fas fa-file-code"></i> XML Import</a>
@@ -53,6 +57,9 @@ $adminUser = currentUser();
                         <a href="<?= BASE_URL ?>/admin/sliders.php"
                                 class="<?= ($adminPage ?? '') === 'sliders' ? 'active' : '' ?>"><i
                                         class="fas fa-images"></i> Slider Yönetimi</a>
+                        <a href="<?= BASE_URL ?>/admin/campaigns.php"
+                                class="<?= ($adminPage ?? '') === 'campaigns' ? 'active' : '' ?>"><i
+                                        class="fas fa-bullhorn"></i> Kampanya Yönetimi</a>
                 </nav>
                 <div class="admin-nav-footer">
                         <a href="<?= BASE_URL ?>/" target="_blank"><i class="fas fa-external-link-alt"></i> Siteyi

@@ -19,19 +19,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'clear') {
         clearCart();
+        unset($_SESSION['coupon']);
         flash('cart', 'Sepet temizlendi.', 'success');
+        redirect('/cart.php');
+    }
+    if ($action === 'apply_coupon') {
+        $code = trim($_POST['coupon_code'] ?? '');
+        $userId = $_SESSION['user_id'] ?? null;
+        $tempSubtotal = getCartTotal();
+        $result = applyCoupon($code, $userId, $tempSubtotal);
+        if ($result['success']) {
+            $_SESSION['coupon'] = [
+                'campaign_id' => $result['campaign']['id'],
+                'code' => $result['campaign']['code'],
+                'name' => $result['campaign']['name'],
+                'discount' => $result['discount'],
+                'type' => $result['campaign']['type'],
+            ];
+            flash('cart', $result['message'], 'success');
+        } else {
+            flash('cart', $result['message'], 'error');
+        }
+        redirect('/cart.php');
+    }
+    if ($action === 'remove_coupon') {
+        unset($_SESSION['coupon']);
+        flash('cart', 'İndirim kodu kaldırıldı.', 'success');
         redirect('/cart.php');
     }
 }
 
 $cartItems = getCartItems();
 $subtotal = getCartTotal();
+
+// Müşteriye özel kampanya otomatik uygulama
+$userId = $_SESSION['user_id'] ?? null;
+if ($userId && !isset($_SESSION['coupon'])) {
+    try {
+        $userCampaigns = getActiveCampaignsForUser($userId);
+        if (!empty($userCampaigns)) {
+            $uc = $userCampaigns[0];
+            $discount = 0;
+            if ($uc['discount_percent'] > 0) {
+                $discount = round($subtotal * $uc['discount_percent'] / 100, 2);
+            } elseif ($uc['discount_amount'] > 0) {
+                $discount = $uc['discount_amount'];
+            }
+            if ($uc['max_discount'] > 0 && $discount > $uc['max_discount'])
+                $discount = $uc['max_discount'];
+            if ($discount > 0 && ($uc['min_order_amount'] <= 0 || $subtotal >= $uc['min_order_amount'])) {
+                $_SESSION['coupon'] = [
+                    'campaign_id' => $uc['id'],
+                    'code' => $uc['code'],
+                    'name' => $uc['name'],
+                    'discount' => $discount,
+                    'type' => $uc['type'],
+                ];
+            }
+        }
+    } catch (Exception $e) {
+    }
+}
+
+// Kupon indirimi (session'dan)
+$couponDiscount = 0;
+$appliedCoupon = $_SESSION['coupon'] ?? null;
+if ($appliedCoupon) {
+    // Subtotal değişince indirimi yeniden hesapla
+    try {
+        $campaign = Database::fetch("SELECT * FROM campaigns WHERE id = ? AND status = 1", [$appliedCoupon['campaign_id']]);
+        if ($campaign) {
+            $disc = 0;
+            if ($campaign['discount_percent'] > 0) {
+                $disc = round($subtotal * $campaign['discount_percent'] / 100, 2);
+            } elseif ($campaign['discount_amount'] > 0) {
+                $disc = $campaign['discount_amount'];
+            }
+            if ($campaign['max_discount'] > 0 && $disc > $campaign['max_discount'])
+                $disc = $campaign['max_discount'];
+            if ($disc > $subtotal)
+                $disc = $subtotal;
+            $couponDiscount = $disc;
+            $_SESSION['coupon']['discount'] = $disc;
+        } else {
+            unset($_SESSION['coupon']);
+            $appliedCoupon = null;
+        }
+    } catch (Exception $e) {
+    }
+}
+
 $kdvRate = 0.20; // %20 KDV
 $kdvAmount = round($subtotal * $kdvRate, 2);
 $shippingCost = floatval(getSetting('shipping_cost', 49.90));
 $freeShippingLimit = floatval(getSetting('free_shipping_limit', 2000));
 $shipping = $subtotal >= $freeShippingLimit ? 0 : $shippingCost;
-$total = $subtotal + $kdvAmount + $shipping;
+$total = $subtotal + $kdvAmount + $shipping - $couponDiscount;
+if ($total < 0)
+    $total = 0;
 ?>
 
 <div class="container" style="padding:32px 20px;">
@@ -138,6 +223,34 @@ $total = $subtotal + $kdvAmount + $shipping;
                         <?= formatPrice($freeShippingLimit - $subtotal) ?> daha ekleyin, kargo ücretsiz!
                     </div>
                 <?php endif; ?>
+
+                <!-- İndirim Kodu -->
+                <div style="border-top:1px dashed #e5e7eb;padding-top:12px;margin-top:8px">
+                    <?php if ($appliedCoupon): ?>
+                        <div class="cart-summary-row" style="color:var(--success)">
+                            <span><i class="fas fa-tag"></i> <?= e($appliedCoupon['name']) ?></span>
+                            <span>-<?= formatPrice($couponDiscount) ?></span>
+                        </div>
+                        <form method="POST" style="margin-top:6px">
+                            <input type="hidden" name="action" value="remove_coupon">
+                            <button type="submit"
+                                style="background:none;border:none;color:var(--danger);font-size:0.75rem;cursor:pointer;padding:0">
+                                <i class="fas fa-times"></i> Kodu Kaldır
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <form method="POST" style="display:flex;gap:6px">
+                            <input type="hidden" name="action" value="apply_coupon">
+                            <input type="text" name="coupon_code" class="form-control" placeholder="İndirim kodu"
+                                style="flex:1;padding:8px 12px;text-transform:uppercase;letter-spacing:1px;font-size:0.8rem">
+                            <button type="submit" class="btn btn-primary"
+                                style="padding:8px 14px;white-space:nowrap;font-size:0.8rem">
+                                <i class="fas fa-check"></i> Uygula
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+
                 <div class="cart-summary-row total">
                     <span>Genel Toplam <small style="font-weight:400;font-size:0.7rem;color:var(--gray)">(KDV
                             Dahil)</small></span>

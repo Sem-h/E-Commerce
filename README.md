@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-2.0.1-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.0.2-blue?style=for-the-badge" />
 </p>
 
 <h1 align="center">🛒 V-Commerce</h1>
@@ -31,6 +31,9 @@
 | 🔍 **Arama & Filtreleme** | Kategori, marka ve fiyat aralığına göre filtreleme |
 | 🛒 **Sepet Sistemi** | Miktar güncelleme, KDV hesaplama, kargo ücreti |
 | 💳 **Ödeme** | Kapıda ödeme, havale/EFT, PayTR entegrasyonu (hazır) |
+| 🎯 **Kampanya Sistemi** | % indirim, hediye çeki, indirim kodu, müşteriye özel |
+| 🏠 **Adrese Teslim** | Şehir bazı gün içi teslimat seçeneği |
+| 📍 **Akıllı Adres** | İl/İlçe cascading dropdown, 81 il desteği |
 | 👤 **Müşteri Paneli** | Siparişler, adresler, profil yönetimi |
 | 📱 **Responsive Tasarım** | Tüm cihazlarda mükemmel görünüm |
 
@@ -45,6 +48,9 @@
 | 📈 **%20 Kâr Marjı** | XML fiyatlarına otomatik eklenen kâr oranı |
 | 👥 **Kullanıcı Yönetimi** | Müşteriler, roller |
 | 📦 **Sipariş Yönetimi** | Durum takibi, detay görüntüleme |
+| 🎯 **Kampanya Yönetimi** | 4 tür kampanya, kupon kodu, kullanım takibi |
+| 🚚 **Adrese Teslim Ayarları** | Şehir/ilçe bazlı, ek ücret, aktif/pasif |
+| 🖼️ **Slider Yönetimi** | Hero slider, promosyon kartları |
 
 ### 💰 Fiyatlandırma Sistemi
 ```
@@ -94,7 +100,9 @@ E-Ticaret/
 │   ├── products.php        # Ürün yönetimi
 │   ├── categories.php      # Kategori yönetimi
 │   ├── orders.php          # Sipariş yönetimi
-│   ├── users.php           # Kullanıcı yönetimi
+│   ├── campaigns.php       # Kampanya yönetimi
+│   ├── delivery-settings.php # Adrese teslim ayarları
+│   ├── sliders.php         # Slider yönetimi
 │   └── xml-import.php      # XML import (TCMB kuru)
 ├── ajax/                   # AJAX endpointleri
 │   ├── cart.php             # Sepet işlemleri
@@ -187,6 +195,37 @@ E-Ticaret/
 - ✅ HTML entity decode (ürün adları & açıklamalar)
 - ✅ 232 ürün adı + 1429 kısa açıklama düzeltildi
 - ✅ Import script'te otomatik decode
+
+---
+
+### v2.0.2 — 18 Şubat 2026
+> 🎯 **Kampanya Modülü, Akıllı Adres & Adrese Teslim**
+
+#### 🎯 Kampanya Sistemi
+- ✅ 4 kampanya türü: % indirim, hediye çeki, indirim kodu, müşteriye özel
+- ✅ Admin CRUD sayfası (istatistik kartları + tab'lı form)
+- ✅ Otomatik kupon kodu üretici
+- ✅ Sepette indirim kodu girişi + canlı hesaplama
+- ✅ Kullanım limiti, min. sepet tutarı, tarih aralığı
+- ✅ Sipariş kaydında kampanya takibi
+
+#### 📍 Türkiye Adres Seçici
+- ✅ 81 il + tüm ilçeler JSON veri dosyası
+- ✅ Cascading İl → İlçe dropdown (AJAX)
+- ✅ Mahalle/Cadde serbest metin alanı
+- ✅ Adres ekleme + düzenleme formları
+- ✅ Checkout entegrasyonu
+
+#### 🚚 Adrese Teslim (Şehir İçi Teslimat)
+- ✅ Admin ayar sayfası (aktif/pasif, şehir, ücret, ilçe filtresi)
+- ✅ Müşteri önizleme paneli
+- ✅ Checkout'ta dinamik göster/gizle (İl seçimine göre)
+- ✅ Kargo satırı "Adrese Teslim" olarak değişiyor
+- ✅ Sipariş kaydında teslimat bilgisi
+
+#### 🖼️ Slider Yönetimi
+- ✅ Admin slider CRUD sayfası (premium tasarım)
+- ✅ Homepage dinamik slider + promosyon kartları
 
 ---
 

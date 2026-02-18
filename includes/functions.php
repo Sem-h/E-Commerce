@@ -502,3 +502,143 @@ function getTCMBRates()
 
     return $rates;
 }
+
+// ==================== KAMPANYA FONKSİYONLARI ====================
+
+/**
+ * Kupon kodu doğrula ve indirim hesapla
+ * @return array ['success' => bool, 'message' => string, 'discount' => float, 'campaign' => array|null]
+ */
+function applyCoupon($code, $userId, $subtotal)
+{
+    $code = strtoupper(trim($code));
+    if (empty($code)) {
+        return ['success' => false, 'message' => 'Lütfen bir indirim kodu girin.', 'discount' => 0, 'campaign' => null];
+    }
+
+    $campaign = Database::fetch(
+        "SELECT * FROM campaigns WHERE UPPER(code) = ? AND status = 1",
+        [$code]
+    );
+
+    if (!$campaign) {
+        return ['success' => false, 'message' => 'Geçersiz indirim kodu.', 'discount' => 0, 'campaign' => null];
+    }
+
+    // Tarih kontrolü
+    $now = date('Y-m-d H:i:s');
+    if ($campaign['start_date'] && $now < $campaign['start_date']) {
+        return ['success' => false, 'message' => 'Bu kampanya henüz başlamadı.', 'discount' => 0, 'campaign' => null];
+    }
+    if ($campaign['end_date'] && $now > $campaign['end_date']) {
+        return ['success' => false, 'message' => 'Bu kampanyanın süresi dolmuş.', 'discount' => 0, 'campaign' => null];
+    }
+
+    // Kullanım limiti
+    if ($campaign['usage_limit'] > 0 && $campaign['used_count'] >= $campaign['usage_limit']) {
+        return ['success' => false, 'message' => 'Bu kampanyanın kullanım limiti dolmuş.', 'discount' => 0, 'campaign' => null];
+    }
+
+    // Müşteriye özel kontrol
+    if ($campaign['user_id'] && $campaign['user_id'] != $userId) {
+        return ['success' => false, 'message' => 'Bu kod sizin için geçerli değil.', 'discount' => 0, 'campaign' => null];
+    }
+
+    // Minimum sipariş kontrolü
+    if ($campaign['min_order_amount'] > 0 && $subtotal < $campaign['min_order_amount']) {
+        return [
+            'success' => false,
+            'message' => 'Minimum sipariş tutarı: ' . formatPrice($campaign['min_order_amount']),
+            'discount' => 0,
+            'campaign' => null
+        ];
+    }
+
+    // Kullanıcı daha önce kullandı mı (tek kullanımlık kontrolü)
+    if ($userId && $campaign['type'] === 'gift_voucher') {
+        $used = Database::fetch(
+            "SELECT id FROM campaign_usage WHERE campaign_id = ? AND user_id = ?",
+            [$campaign['id'], $userId]
+        );
+        if ($used) {
+            return ['success' => false, 'message' => 'Bu hediye çekini zaten kullandınız.', 'discount' => 0, 'campaign' => null];
+        }
+    }
+
+    // İndirim hesapla
+    $discount = 0;
+    if ($campaign['discount_percent'] > 0) {
+        $discount = round($subtotal * $campaign['discount_percent'] / 100, 2);
+    }
+    if ($campaign['discount_amount'] > 0) {
+        $discount = $campaign['discount_amount'];
+    }
+
+    // Max indirim sınırı
+    if ($campaign['max_discount'] > 0 && $discount > $campaign['max_discount']) {
+        $discount = $campaign['max_discount'];
+    }
+
+    // İndirim toplam fiyattan fazla olamaz
+    if ($discount > $subtotal) {
+        $discount = $subtotal;
+    }
+
+    $typeNames = [
+        'percentage' => '% İndirim',
+        'gift_voucher' => 'Hediye Çeki',
+        'discount_code' => 'İndirim Kodu',
+        'customer_specific' => 'Özel İndirim',
+    ];
+
+    return [
+        'success' => true,
+        'message' => $typeNames[$campaign['type']] . ' uygulandı! ' . formatPrice($discount) . ' indirim.',
+        'discount' => $discount,
+        'campaign' => $campaign
+    ];
+}
+
+/**
+ * Müşteriye özel aktif kampanyaları getir
+ */
+function getActiveCampaignsForUser($userId)
+{
+    if (!$userId)
+        return [];
+    $now = date('Y-m-d H:i:s');
+    return Database::fetchAll(
+        "SELECT * FROM campaigns 
+         WHERE status = 1 AND type = 'customer_specific' AND user_id = ?
+         AND (start_date IS NULL OR start_date <= ?)
+         AND (end_date IS NULL OR end_date >= ?)
+         AND (usage_limit = 0 OR used_count < usage_limit)
+         ORDER BY created_at DESC",
+        [$userId, $now, $now]
+    );
+}
+
+/**
+ * Kampanya kullanımını kaydet
+ */
+function recordCampaignUsage($campaignId, $userId, $orderId, $discountAmount)
+{
+    Database::query(
+        "INSERT INTO campaign_usage (campaign_id, user_id, order_id, discount_amount) VALUES (?, ?, ?, ?)",
+        [$campaignId, $userId, $orderId, $discountAmount]
+    );
+    Database::query("UPDATE campaigns SET used_count = used_count + 1 WHERE id = ?", [$campaignId]);
+}
+
+/**
+ * Rastgele kupon kodu oluştur
+ */
+function generateCouponCode($length = 8)
+{
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $code = '';
+    for ($i = 0; $i < $length; $i++) {
+        $code .= $chars[random_int(0, strlen($chars) - 1)];
+    }
+    return $code;
+}

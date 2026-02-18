@@ -45,6 +45,15 @@
 - `wishlist` — Favoriler
 - `settings` — Site ayarları (key/value)
 - `xml_imports` — Import geçmişi
+- `sliders` — Ana sayfa slider yönetimi (hero slider + promosyon kartları)
+- `campaigns` — Kampanya/indirim yönetimi (4 tür: %, hediye çeki, kod, müşteriye özel)
+- `campaign_usage` — Kampanya kullanım takibi
+
+## Kampanya Sistemi
+- 4 tür: `percentage` (% indirim), `gift_voucher` (hediye çeki), `discount_code` (indirim kodu), `customer_specific` (müşteriye özel)
+- Sepette kod girişi → doğrulama → indirim uygulama
+- Müşteriye özel kampanyalar login sonrası otomatik uygulanır
+- Kullanım limiti, tarih aralığı, min sipariş tutarı, max indirim kontrolü
 
 ## CLI Uyarıları
 - `php` PATH'te yok, `C:\xampp\php\php.exe` kullanılmalı
