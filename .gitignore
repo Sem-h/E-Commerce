@@ -1,0 +1,22 @@
+# XML data files
+*.xml
+xml_result.txt
+cat_result.txt
+check_result.txt
+
+# Temp import scripts
+import_*.php
+check_*.php
+analyze_*.php
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
