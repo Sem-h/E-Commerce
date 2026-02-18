@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-2.0.3-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.0.4-blue?style=for-the-badge" />
 </p>
 
 <h1 align="center">🛒 V-Commerce</h1>
@@ -47,7 +47,8 @@
 | 📥 **XML Import** | URL/dosya import, çoklu format desteği |
 | 💱 **Döviz Kuru** | TCMB entegrasyonu, otomatik USD/EUR → TRY çevirisi |
 | 📈 **%20 Kâr Marjı** | XML fiyatlarına otomatik eklenen kâr oranı |
-| 👥 **Kullanıcı Yönetimi** | Müşteriler, roller |
+| 👥 **Müşteri Yönetimi** | Sipariş, harcama, arama, ciro istatistikleri |
+| 🛡️ **Yönetici Yönetimi** | Admin kullanıcılar, yeni yönetici ekleme |
 | 📦 **Sipariş Yönetimi** | Durum takibi, detay görüntüleme |
 | 🎯 **Kampanya Yönetimi** | 4 tür kampanya, kupon kodu, kullanım takibi |
 | 🚚 **Adrese Teslim Ayarları** | Şehir/ilçe bazlı, ek ücret, aktif/pasif |
@@ -101,6 +102,8 @@ E-Ticaret/
 │   ├── products.php        # Ürün yönetimi
 │   ├── categories.php      # Kategori yönetimi
 │   ├── orders.php          # Sipariş yönetimi
+│   ├── customers.php       # Müşteri yönetimi
+│   ├── users.php           # Yönetici yönetimi
 │   ├── campaigns.php       # Kampanya yönetimi
 │   ├── delivery-settings.php # Adrese teslim ayarları
 │   ├── sliders.php         # Slider yönetimi
@@ -196,6 +199,20 @@ E-Ticaret/
 - ✅ HTML entity decode (ürün adları & açıklamalar)
 - ✅ 232 ürün adı + 1429 kısa açıklama düzeltildi
 - ✅ Import script'te otomatik decode
+
+---
+
+### v2.0.4 — 19 Şubat 2026
+> 🛠️ **Admin Panel İyileştirmeleri**
+
+#### 📊 Admin Sidebar Reorganizasyonu
+- ✅ E-ticaret odaklı menü sıralaması (Dashboard → Siparişler → Ürünler → Kategoriler → Müşteriler)
+- ✅ 3 mantıksal grup: E-Ticaret, Pazarlama, Ayarlar
+
+#### 👥 Müşteri & Yönetici Ayrımı
+- ✅ `customers.php`: Müşteri listesi (sipariş sayısı, toplam harcama, ciro, arama)
+- ✅ `users.php`: Sadece admin kullanıcılar + yeni yönetici ekleme modalı
+- ✅ İstatistik kartları (toplam müşteri, aktif, sipariş veren, toplam ciro)
 
 ---
 

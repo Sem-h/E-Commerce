@@ -26,10 +26,10 @@ $adminUser = currentUser();
                         <div class="icon">V</div> V-Commerce
                 </div>
                 <nav class="admin-nav">
-                        <span class="admin-nav-section">Ana Menü</span>
+                        <span class="admin-nav-section">E-Ticaret</span>
                         <a href="<?= BASE_URL ?>/admin/"
                                 class="<?= ($adminPage ?? '') === 'dashboard' ? 'active' : '' ?>"><i
-                                        class="fas fa-home"></i> Dashboard</a>
+                                        class="fas fa-chart-line"></i> Dashboard</a>
                         <a href="<?= BASE_URL ?>/admin/orders.php"
                                 class="<?= ($adminPage ?? '') === 'orders' ? 'active' : '' ?>"><i
                                         class="fas fa-shopping-bag"></i> Siparişler</a>
@@ -38,28 +38,32 @@ $adminUser = currentUser();
                                         class="fas fa-box"></i> Ürünler</a>
                         <a href="<?= BASE_URL ?>/admin/categories.php"
                                 class="<?= ($adminPage ?? '') === 'categories' ? 'active' : '' ?>"><i
-                                        class="fas fa-th-list"></i> Kategoriler</a>
-                        <span class="admin-nav-section">Yönetim</span>
-                        <a href="<?= BASE_URL ?>/admin/users.php"
-                                class="<?= ($adminPage ?? '') === 'users' ? 'active' : '' ?>"><i
-                                        class="fas fa-users"></i> Kullanıcılar</a>
-                        <a href="<?= BASE_URL ?>/admin/settings.php"
-                                class="<?= ($adminPage ?? '') === 'settings' ? 'active' : '' ?>"><i
-                                        class="fas fa-cog"></i> Ayarlar</a>
-                        <a href="<?= BASE_URL ?>/admin/delivery-settings.php"
-                                class="<?= ($adminPage ?? '') === 'delivery_settings' ? 'active' : '' ?>"
-                                style="padding-left:36px;font-size:0.8rem"><i class="fas fa-shipping-fast"></i> Adrese
-                                Teslim Ayarları</a>
-                        <a href="<?= BASE_URL ?>/admin/xml-import.php"
-                                class="<?= ($adminPage ?? '') === 'xml' ? 'active' : '' ?>"><i
-                                        class="fas fa-file-code"></i> XML Import</a>
-                        <span class="admin-nav-section">Tasarım Yönetimi</span>
+                                        class="fas fa-tags"></i> Kategoriler</a>
+                        <a href="<?= BASE_URL ?>/admin/customers.php"
+                                class="<?= ($adminPage ?? '') === 'customers' ? 'active' : '' ?>"><i
+                                        class="fas fa-users"></i> Müşteriler</a>
+
+                        <span class="admin-nav-section">Pazarlama</span>
+                        <a href="<?= BASE_URL ?>/admin/campaigns.php"
+                                class="<?= ($adminPage ?? '') === 'campaigns' ? 'active' : '' ?>"><i
+                                        class="fas fa-percent"></i> Kampanyalar</a>
                         <a href="<?= BASE_URL ?>/admin/sliders.php"
                                 class="<?= ($adminPage ?? '') === 'sliders' ? 'active' : '' ?>"><i
                                         class="fas fa-images"></i> Slider Yönetimi</a>
-                        <a href="<?= BASE_URL ?>/admin/campaigns.php"
-                                class="<?= ($adminPage ?? '') === 'campaigns' ? 'active' : '' ?>"><i
-                                        class="fas fa-bullhorn"></i> Kampanya Yönetimi</a>
+
+                        <span class="admin-nav-section">Ayarlar</span>
+                        <a href="<?= BASE_URL ?>/admin/settings.php"
+                                class="<?= ($adminPage ?? '') === 'settings' ? 'active' : '' ?>"><i
+                                        class="fas fa-cog"></i> Genel Ayarlar</a>
+                        <a href="<?= BASE_URL ?>/admin/delivery-settings.php"
+                                class="<?= ($adminPage ?? '') === 'delivery_settings' ? 'active' : '' ?>"><i
+                                        class="fas fa-truck"></i> Teslimat Ayarları</a>
+                        <a href="<?= BASE_URL ?>/admin/xml-import.php"
+                                class="<?= ($adminPage ?? '') === 'xml' ? 'active' : '' ?>"><i
+                                        class="fas fa-file-import"></i> XML Import</a>
+                        <a href="<?= BASE_URL ?>/admin/users.php"
+                                class="<?= ($adminPage ?? '') === 'users' ? 'active' : '' ?>"><i
+                                        class="fas fa-user-shield"></i> Yöneticiler</a>
                 </nav>
                 <div class="admin-nav-footer">
                         <a href="<?= BASE_URL ?>/" target="_blank"><i class="fas fa-external-link-alt"></i> Siteyi
