@@ -13,6 +13,9 @@ analyze_*.php
 .vscode/
 .idea/
 
+# Agent
+.agent/
+
 # OS
 Thumbs.db
 .DS_Store
